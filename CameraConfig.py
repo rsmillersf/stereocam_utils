@@ -2,10 +2,11 @@ import streamlit as st
 import cv2
 import numpy as np
 import zmq
-import utils
+from utils import combs
 
 st.title("Stereo Camera Configuration and Rectification")
 
+'''
 source = "/apps/data/left2.png"
 
 context = zmq.Context()
@@ -25,3 +26,5 @@ while counter < 31:
     socket.send_json(md, flags=zmq.SNDMORE)
     socket.send(frame, copy=True, track=False)
     counter += 1
+
+'''

@@ -7,13 +7,15 @@ def spoof(frame, tiles=2, interpolation="INTER_AREA"):
     interpolation = "cv2." + interpolation
     height, width, _ = frame.shape
     dim = (int(width/tiles), height) # h and w are reversed re: shape
-    img = cv2.resize(frame, dim, interpolation = interpolation)
+    img = cv2.resize(frame, dim, interpolation = cv2.INTER_AREA)
     return cv2.hconcat([img, img])
 
-def scale(frame):
+def scale(frame, orientation="landscape"):
     height, width, _ = frame.shape
-    scale = 480/width
-    dim = (int(height*scale), int(width*scale))
+    if orientation == "landscape":
+        scale = 480/height
+    else: scale = 480/width
+    dim = (int(width*scale), int(height*scale))
     scaled_frame = cv2.resize(frame, dim, interpolation = cv2.INTER_AREA)
     return scaled_frame
 
