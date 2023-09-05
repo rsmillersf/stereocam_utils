@@ -1,4 +1,9 @@
 import streamlit as st
+import zmq
+import utils
+import time
+import cv2
+import numpy as np
 
 st.title("Calibration")
 run = st.checkbox("Run")
@@ -12,12 +17,20 @@ with col2:
 #camera1 = cv2.VideoCapture("/dev/video0")
 #camera2 = cv2.VideoCapture("/dev/video0")
 
+context = zmq.Context()
+socket = context.socket(zmq.REQ)
+socket.connect("tcp://127.0.0.1:5555")
+
 while run:
-	_, frame1 = camera1.read()
-	_, frame2 = camera1.read()
-	frame1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2GRAY)
-	frame2 = cv2.cvtColor(frame2, cv2.COLOR_BGR2GRAY)
-	FW1.image(frame1)
-	FW2.image(frame2)
+    socket.send_string("ready")
+    md = socket.recv_json()
+    frame = socket.recv(copy=True, track=False)
+    frame = np.frombuffer(msg, dtype=md["dtype"]).reshape(md["shape"])
+    imgL, imgR = combs.split(frame)
+    imgL = cv2.cvtColor(imgL, cv2.COLOR_BGR2GRAY)
+    imgR = cv2.cvtColor(imgR, cv2.COLOR_BGR2GRAY)
+    FW1.image(imgL)
+    FW2.image(imgR)
+    time.sleep(1)
 else:
 	st.write("Stopped")

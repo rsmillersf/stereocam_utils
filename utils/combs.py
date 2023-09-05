@@ -10,6 +10,14 @@ def spoof(frame, tiles=2, interpolation="INTER_AREA"):
     img = cv2.resize(frame, dim, interpolation = interpolation)
     return cv2.hconcat([img, img])
 
+def scale(frame):
+    height, width, _ = frame.shape
+    scale = 480/width
+    dim = (int(height*scale), int(width*scale))
+    scaled_frame = cv2.resize(frame, dim, interpolation = cv2.INTER_AREA)
+    return scaled_frame
+
+
 #Splits an image into two streams and resizes each up
 def split(frame, tiles=2, interpolation = "INTER_AREA"):
     interpolation = "cv2." + interpolation
@@ -19,3 +27,8 @@ def split(frame, tiles=2, interpolation = "INTER_AREA"):
     imgL = cv2.resize(frame[:,:midpoint,:], dim, interpolation = cv2.INTER_LINEAR)
     imgR = cv2.resize(frame[:,midpoint:,:], dim, interpolation = cv2.INTER_LINEAR)
     return imgL, imgR
+
+#Package frame metadata for use in reconstructing np array
+def package(frame):
+	md = dict(shape = frame.shape, dtype = frame.dtype.name)
+	return md
