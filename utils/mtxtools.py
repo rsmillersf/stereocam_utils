@@ -33,8 +33,4 @@ def get_stereo_map(objpoints, imgpointsL, imgpointsR, frameL, frameR):
     Left_Stereo_Map = cv2.initUndistortRectifyMap(new_mtxL, distL, rect_l, proj_mat_l,frameL.shape[::-1], cv2.CV_16SC2)
     Right_Stereo_Map = cv2.initUndistortRectifyMap(new_mtxR, distR, rect_r, proj_mat_r,frameR.shape[::-1], cv2.CV_16SC2)
 
-    print(Left_Stereo_Map[0])
-    arr = np.asarray(Left_Stereo_Map[0])
-    print(np.info(arr))
-
     return Left_Stereo_Map, Right_Stereo_Map
