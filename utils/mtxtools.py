@@ -4,7 +4,7 @@ import numpy as np
 #Calc intrinsics for a camera, expects grayscale image
 def get_intrinsics(objpoints, imgpoints, frame):
     ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, frame.shape[::-1], None, None)
-    height, width, _ = frame.shape
+    height, width = frame.shape
     new_mtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (width, height), 1, (width, height))
     return new_mtx, dist
 
@@ -30,13 +30,11 @@ def get_stereo_map(objpoints, imgpointsL, imgpointsR, frameL, frameR):
 
 
     # Mapping equired to obtain the undistorted rectified stereo image pair
-    Left_Stereo_Map= cv2.initUndistortRectifyMap(new_mtxL, distL, rect_l, proj_mat_l,frameL.shape[::-1], cv2.CV_16SC2)
-    Right_Stereo_Map= cv2.initUndistortRectifyMap(new_mtxR, distR, rect_r, proj_mat_r,frameR.shape[::-1], cv2.CV_16SC2)
- 
-print("Saving paraeters ......")
-cv_file = cv2.FileStorage("improved_params2.xml", cv2.FILE_STORAGE_WRITE)
-cv_file.write("Left_Stereo_Map_x",Left_Stereo_Map[0])
-cv_file.write("Left_Stereo_Map_y",Left_Stereo_Map[1])
-cv_file.write("Right_Stereo_Map_x",Right_Stereo_Map[0])
-cv_file.write("Right_Stereo_Map_y",Right_Stereo_Map[1])
-cv_file.release()
+    Left_Stereo_Map = cv2.initUndistortRectifyMap(new_mtxL, distL, rect_l, proj_mat_l,frameL.shape[::-1], cv2.CV_16SC2)
+    Right_Stereo_Map = cv2.initUndistortRectifyMap(new_mtxR, distR, rect_r, proj_mat_r,frameR.shape[::-1], cv2.CV_16SC2)
+
+    print(Left_Stereo_Map[0])
+    arr = np.asarray(Left_Stereo_Map[0])
+    print(np.info(arr))
+
+    return Left_Stereo_Map, Right_Stereo_Map

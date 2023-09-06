@@ -1,6 +1,6 @@
 import streamlit as st
 import zmq
-from utils import imgtools
+from utils import imgtools, mtxtools
 import time
 import cv2
 import numpy as np
@@ -59,6 +59,20 @@ while run:
             imgL = cv2.drawChessboardCorners(imgL, (CHESS_X,CHESS_Y), corners2L, retL)
             imgR = cv2.drawChessboardCorners(imgR, (CHESS_X,CHESS_Y), corners2R, retR)
             found += 1
+
+    if found >= NUM:
+        st.write("Calculating stereo maps...")
+        Left_Stereo_Map, Right_Stereo_Map = mtxtools.get_stereo_map(objpoints, imgpointsL, imgpointsR, grayL, grayR)
+
+        st.write("Saving new params...")
+        cv_file = cv2.FileStorage("/apps/data/improved_params2.xml", cv2.FILE_STORAGE_WRITE)
+        cv_file.write("Left_Stereo_Map_x",Left_Stereo_Map[0])
+        cv_file.write("Left_Stereo_Map_y",Left_Stereo_Map[1])
+        cv_file.write("Right_Stereo_Map_x",Right_Stereo_Map[0])
+        cv_file.write("Right_Stereo_Map_y",Right_Stereo_Map[1])
+        cv_file.release()
+        st.write("Done!")
+        break
 
     FW1.image(imgL)
     FW2.image(imgR)
