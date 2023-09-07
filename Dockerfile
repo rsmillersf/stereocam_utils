@@ -9,5 +9,6 @@ WORKDIR /apps
 RUN git clone https://github.com/rsmillersf/stereocam_utils.git
 
 EXPOSE 5555
+EXPOSE 8501
 
 CMD streamlit run CameraConfig.py
