@@ -28,43 +28,52 @@ stereo = cv2.StereoBM_create()
 
 # Reading the saved mapping values for stereo image rectification
 cv_file = cv2.FileStorage("/apps/data/StereoMaps.xml", cv2.FILE_STORAGE_READ)
-Left_Stereo_Map_x = cv_file.getNode("Left_Stereo_Map_x").mat()
-Left_Stereo_Map_y = cv_file.getNode("Left_Stereo_Map_y").mat()
-Right_Stereo_Map_x = cv_file.getNode("Right_Stereo_Map_x").mat()
-Right_Stereo_Map_y = cv_file.getNode("Right_Stereo_Map_y").mat()
-cv_file.release()
+if cv_file.isOpened():
+    Left_Stereo_Map_x = cv_file.getNode("Left_Stereo_Map_x").mat()
+    Left_Stereo_Map_y = cv_file.getNode("Left_Stereo_Map_y").mat()
+    Right_Stereo_Map_x = cv_file.getNode("Right_Stereo_Map_x").mat()
+    Right_Stereo_Map_y = cv_file.getNode("Right_Stereo_Map_y").mat()
+    cv_file.release()
+else:
+    st.warning("Could not open Stero Maps. Please complete camera calibration step and try again.")
+    st.stop()
 
 # Reading the bock matching params
+sbParams = 1
 cv_file = cv2.FileStorage("/apps/data/BlockMatchingParams.xml", cv2.FILE_STORAGE_READ)
-numDisparities = cv_file.getNode("numDisparities").real()
-blockSize = int(cv_file.getNode("blockSize").real())
-#preFilterType = cv_file.getNode("preFilterType").real()
-preFilterSize = cv_file.getNode("preFilterSize").real()
-preFilterCap = cv_file.getNode("preFilterCap").real()
-textureThreshold = cv_file.getNode("textureThreshold").real()
-uniquenessRatio = cv_file.getNode("uniquenessRation").real()
-speckleRange = cv_file.getNode("speckleRange").real()
-speckleWindowSize = cv_file.getNode("speckleWindowSize").real()
-disp12MaxDiff = cv_file.getNode("displ2MaxDiff").real()
-minDisparity = cv_file.getNode("minDisparity").real()
-cv_file.release()
+if cv_file.isOpened():
+    numDisparities = cv_file.getNode("numDisparities").real()
+    blockSize = int(cv_file.getNode("blockSize").real())
+    #preFilterType = cv_file.getNode("preFilterType").real()
+    preFilterSize = cv_file.getNode("preFilterSize").real()
+    preFilterCap = cv_file.getNode("preFilterCap").real()
+    textureThreshold = cv_file.getNode("textureThreshold").real()
+    uniquenessRatio = cv_file.getNode("uniquenessRatio").real()
+    speckleRange = cv_file.getNode("speckleRange").real()
+    speckleWindowSize = cv_file.getNode("speckleWindowSize").real()
+    disp12MaxDiff = cv_file.getNode("disp12MaxDiff").real()
+    minDisparity = cv_file.getNode("minDisparity").real()
+    cv_file.release()
+else:
+    sbParams = 0
 
 # Block Matching params
 with col1:
-    numDisparities = st.slider("Number of Disparities", 1*16, 17*16, int(numDisparities), 16)
-    blockSize = st.slider("Block Size", (5*2+5), (50*2+5), int(blockSize), 2)
+    #numDisparities = st.slider("Number of Disparities", 1*16, 17*16, int(numDisparities), 16)
+    numDisparities = st.slider("Number of Disparities", 1*16, 17*16, **({"value":int(numDisparities)} if sbParams else {}), step=16)
+    blockSize = st.slider("Block Size", (5*2+5), (50*2+5), **({"value":int(blockSize)} if sbParams else {}), step=2)
     #preFilterType = st.select_slider("Pre-Filter Type", options = ["CV_STEREO_BM_XSOBEL", "CV_STEREO_BM_NORMALIZED_RESPONSE"])
-    preFilterSize = st.slider("Pre-Filter Size", 9, 55, int(preFilterSize), 2)
-    preFilterCap = st.slider("Pre-Filter Cap", 5, 62, int(preFilterCap))
-    textureThreshold = st.slider("Texture Threshold", 10, 100, int(textureThreshold))
+    preFilterSize = st.slider("Pre-Filter Size", 9, 55, **({"value":int(preFilterSize)} if sbParams else {}), step=2)
+    preFilterCap = st.slider("Pre-Filter Cap", 5, 62, **({"value":int(preFilterCap)} if sbParams else {}))
+    textureThreshold = st.slider("Texture Threshold", 10, 100, **({"value":int(textureThreshold)} if sbParams else {}))
     
 # More Block Matching params
 with col2:
-    uniquenessRatio = st.slider("Uniqueness Ratio", 15, 100, int(uniquenessRatio))
-    speckleRange = st.slider("Speckle Range", 0, 100, int(speckleRange))
-    speckleWindowSize = st.slider("Speckle Window Size", 3*2, 25*2, int(speckleWindowSize), 2)
-    disp12MaxDiff = st.slider("Disp to Max Diff", 5, 25, int(disp12MaxDiff))
-    minDisparity = st.slider("Min Disparity", 5, 25, int(minDisparity))
+    uniquenessRatio = st.slider("Uniqueness Ratio", 15, 100, **({"value":int(uniquenessRatio)} if sbParams else {}))
+    speckleRange = st.slider("Speckle Range", 0, 100, **({"value":int(speckleRange)} if sbParams else {}))
+    speckleWindowSize = st.slider("Speckle Window Size", 3*2, 25*2, **({"value":int(speckleWindowSize)} if sbParams else {}), step=2)
+    disp12MaxDiff = st.slider("Disp to Max Diff", 5, 25, **({"value":int(disp12MaxDiff)} if sbParams else {}))
+    minDisparity = st.slider("Min Disparity", 5, 25, **({"value":int(minDisparity)} if sbParams else {}))
 
 # View disparity map, adjust as needed using param sliders
 with col3:

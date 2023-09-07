@@ -8,6 +8,6 @@
 <uniquenessRatio>0</uniquenessRatio>
 <speckleRange>24</speckleRange>
 <speckleWindowSize>26</speckleWindowSize>
-<disp12MaxDiff>0</disp12MaxDiff>
+<disp12MaxDiff>14</disp12MaxDiff>
 <minDisparity>17</minDisparity>
 </opencv_storage>
