@@ -19,7 +19,7 @@ img = imgtools.scale(img, "portrait")
 
 # ZMQ settings, comment out for spoof testing
 # context = zmq.Context()
-# sock = context.socket(zmq.REC)
+# sock = context.socket(zmq.REQ)
 # sock.connect(SOCKET)
 ###################################################################
 
@@ -87,6 +87,7 @@ while run:
     frame = imgtools.spoof(img)
 
     # Grab combined images for production, comment out for spoof testing
+    # sock.send_string("ready")
     # md = sock.recv_json()
     # msg = sock.recv(copy=True, track=False)
 	# frame = np.frombuffer(msg, dtype=md["dtype"]).reshape(md["shape"])
