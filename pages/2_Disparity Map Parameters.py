@@ -3,45 +3,87 @@ import cv2
 from utils import imgtools
 import numpy as np
 
-st.title("Set Disparity Map Parameters")
+st.set_page_config(layout="wide")
 
-source = "/apps/data/IMG_0416.JPG"
-img = cv2.imread(source)
+IMG_SOURCE = "/apps/data/IMG_0416.JPG"
+SOCKET = "tcp://127.0.0.1:5555"
+
+# Basic page layout, columns elements filled in after loading saved params
+st.title("Set Disparity Map Parameters")
+col1, col2, col3 = st.columns(3, gap="medium")
+
+##################################################################
+# Spoof setting for testing, comment out for ZMQ run
+img = cv2.imread(IMG_SOURCE)
 img = imgtools.scale(img, "portrait")
+
+# ZMQ settings, comment out for spoof testing
+# context = zmq.Context()
+# sock = context.socket(zmq.REC)
+# sock.connect(SOCKET)
+###################################################################
+
+# Create Block Matching object
 stereo = cv2.StereoBM_create()
 
-st.write("Loading params")
-
-# Reading the mapping values for stereo image rectification
-cv_file = cv2.FileStorage("/apps/data/improved_params2.xml", cv2.FILE_STORAGE_READ)
+# Reading the saved mapping values for stereo image rectification
+cv_file = cv2.FileStorage("/apps/data/StereoMaps.xml", cv2.FILE_STORAGE_READ)
 Left_Stereo_Map_x = cv_file.getNode("Left_Stereo_Map_x").mat()
 Left_Stereo_Map_y = cv_file.getNode("Left_Stereo_Map_y").mat()
 Right_Stereo_Map_x = cv_file.getNode("Right_Stereo_Map_x").mat()
 Right_Stereo_Map_y = cv_file.getNode("Right_Stereo_Map_y").mat()
 cv_file.release()
-st.write("Done!")
 
-col1, col2 = st.columns(2)
+# Reading the bock matching params
+cv_file = cv2.FileStorage("/apps/data/BlockMatchingParams.xml", cv2.FILE_STORAGE_READ)
+numDisparities = cv_file.getNode("numDisparities").real()
+blockSize = int(cv_file.getNode("blockSize").real())
+#preFilterType = cv_file.getNode("preFilterType").real()
+preFilterSize = cv_file.getNode("preFilterSize").real()
+preFilterCap = cv_file.getNode("preFilterCap").real()
+textureThreshold = cv_file.getNode("textureThreshold").real()
+uniquenessRatio = cv_file.getNode("uniquenessRation").real()
+speckleRange = cv_file.getNode("speckleRange").real()
+speckleWindowSize = cv_file.getNode("speckleWindowSize").real()
+disp12MaxDiff = cv_file.getNode("displ2MaxDiff").real()
+minDisparity = cv_file.getNode("minDisparity").real()
+cv_file.release()
 
+# Block Matching params
 with col1:
-    numDisparities = st.slider("Number of Disparities", 1, 17)*16
-    blockSize = st.slider("Block Size", 5, 50)*2 + 5
-    preFilterType = st.select_slider("Pre-Filter Type", options = ["CV_STEREO_BM_XSOBEL", "CV_STEREO_BM_NORMALIZED_RESPONSE"])
-    preFilterSize = st.slider("Pre-Filter Size", 2, 25)*2 + 5
-    preFilterCap = st.slider("Pre-Filter Cap", 5, 62)
-    textureThreshold = st.slider("Texture Threshold", 10, 100)
-    uniquenessRatio = st.slider("Uniqueness Ratio", 15, 100)
-    speckleRange = st.slider("Speckle Range", 0, 100)
-    speckleWindowSize = st.slider("Speckle Window Size", 3, 25)*2
-    disp12MaxDiff = st.slider("Disp to Max Diff", 5, 25)
-    minDisparity = st.slider("Min Disparity", 5, 25)
-
+    numDisparities = st.slider("Number of Disparities", 1*16, 17*16, int(numDisparities), 16)
+    blockSize = st.slider("Block Size", (5*2+5), (50*2+5), int(blockSize), 2)
+    #preFilterType = st.select_slider("Pre-Filter Type", options = ["CV_STEREO_BM_XSOBEL", "CV_STEREO_BM_NORMALIZED_RESPONSE"])
+    preFilterSize = st.slider("Pre-Filter Size", 9, 55, int(preFilterSize), 2)
+    preFilterCap = st.slider("Pre-Filter Cap", 5, 62, int(preFilterCap))
+    textureThreshold = st.slider("Texture Threshold", 10, 100, int(textureThreshold))
+    
+# More Block Matching params
 with col2:
+    uniquenessRatio = st.slider("Uniqueness Ratio", 15, 100, int(uniquenessRatio))
+    speckleRange = st.slider("Speckle Range", 0, 100, int(speckleRange))
+    speckleWindowSize = st.slider("Speckle Window Size", 3*2, 25*2, int(speckleWindowSize), 2)
+    disp12MaxDiff = st.slider("Disp to Max Diff", 5, 25, int(disp12MaxDiff))
+    minDisparity = st.slider("Min Disparity", 5, 25, int(minDisparity))
+
+# View disparity map, adjust as needed using param sliders
+with col3:
     run = st.checkbox("Run")
     frame_window = st.image([])
+    save = st.button("Save block matching params")
 
 while run:
+    ###############################################################
+    # Grab combined image for spoof testing, comment of for production
     frame = imgtools.spoof(img)
+
+    # Grab combined images for production, comment out for spoof testing
+    # md = sock.recv_json()
+    # msg = sock.recv(copy=True, track=False)
+	# frame = np.frombuffer(msg, dtype=md["dtype"]).reshape(md["shape"])
+    ################################################################
+    
+    # Split out L and R frames and resize, create grayscale working copies
     imgL, imgR = imgtools.split(frame)
     grayL = cv2.cvtColor(imgL, cv2.COLOR_BGR2GRAY)
     grayR = cv2.cvtColor(imgR, cv2.COLOR_BGR2GRAY)
@@ -74,7 +116,26 @@ while run:
     stereo.setSpeckleWindowSize(speckleWindowSize)
     stereo.setDisp12MaxDiff(disp12MaxDiff)
     stereo.setMinDisparity(minDisparity)
- 
+
+    # Save params on button press
+    if save:
+        col2.write("Saving...")
+        cv_file = cv2.FileStorage("/apps/data/BlockMatchingParams.xml", cv2.FILE_STORAGE_WRITE)
+        cv_file.write("numDisparities", numDisparities)
+        cv_file.write("blockSize", blockSize)
+        #cv_file.write("preFilterType", preFilterType)
+        cv_file.write("preFilterSize", preFilterSize)
+        cv_file.write("preFilterCap", preFilterCap)
+        cv_file.write("textureThreshold", textureThreshold)
+        cv_file.write("uniquenessRatio", uniquenessRatio)
+        cv_file.write("speckleRange", speckleRange)
+        cv_file.write("speckleWindowSize", speckleWindowSize)
+        cv_file.write("disp12MaxDiff", disp12MaxDiff)
+        cv_file.write("minDisparity", minDisparity)
+        cv_file.release()
+        col3.write("Done!")
+        save = 0
+
     # Calculating disparity using the StereoBM algorithm
     disparity = stereo.compute(Left_nice,Right_nice)
     # NOTE: Code returns a 16bit signed single channel image,
