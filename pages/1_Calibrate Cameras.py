@@ -18,11 +18,11 @@ NUM = 10
 found = 0
 
 # Pull an image every WAIT_TIME seconds
-WAIT_TIME = 1
+WAIT_TIME = 0
 
 # Source for video/image
 IMG_SOURCE = "/apps/data/IMG_0416.JPG"
-SOCKET = "tcp://127.0.0.1:5555"
+SOCKET = "tcp://0.0.0.0:5555"
 
 # Page heading and column structure
 st.title("Calibration")
@@ -36,13 +36,14 @@ with col2:
 
 ##################################################################
 # Spoof setting for testing, comment out for ZMQ run
-img = cv2.imread(IMG_SOURCE)
-img = imgtools.scale(img, "portrait")
+# img = cv2.imread(IMG_SOURCE)
+# img = imgtools.scale(img, "portrait")
 
 # ZMQ settings, comment out for spoof testing
-# context = zmq.Context()
-# sock = context.socket(zmq.REC)
-# sock.connect(SOCKET)
+context = zmq.Context()
+sock = context.socket(zmq.SUB)
+sock.connect(SOCKET)
+sock.subscribe("")
 ###################################################################
 
 # termination criteria
@@ -59,13 +60,13 @@ imgpointsR = [] # 2d points in image plane
 
 while run:
     ###############################################################
-    # Grab combined image for spoof testing, comment of for production
-    frame = imgtools.spoof(img)
-
     # Grab combined images for production, comment out for spoof testing
-    # md = sock.recv_json()
-    # msg = sock.recv(copy=True, track=False)
-	# frame = np.frombuffer(msg, dtype=md["dtype"]).reshape(md["shape"])
+    md = sock.recv_json()
+    msg = sock.recv(copy=True, track=False)
+	frame = np.frombuffer(msg, dtype=md["dtype"]).reshape(md["shape"])
+
+    # Grab combined image for spoof testing, comment of for production
+    frame = imgtools.spoof(frame)
     ################################################################
 
     # Split out L and R frames, resize to original, generate grayscale working copies

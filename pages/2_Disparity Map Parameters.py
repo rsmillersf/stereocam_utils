@@ -6,7 +6,7 @@ import numpy as np
 st.set_page_config(layout="wide")
 
 IMG_SOURCE = "/apps/data/IMG_0416.JPG"
-SOCKET = "tcp://127.0.0.1:5555"
+SOCKET = "tcp://0.0.0.0:5555"
 
 # Basic page layout, columns elements filled in after loading saved params
 st.title("Set Disparity Map Parameters")
@@ -14,13 +14,14 @@ col1, col2, col3 = st.columns(3, gap="medium")
 
 ##################################################################
 # Spoof setting for testing, comment out for ZMQ run
-img = cv2.imread(IMG_SOURCE)
-img = imgtools.scale(img, "portrait")
+# img = cv2.imread(IMG_SOURCE)
+# img = imgtools.scale(img, "portrait")
 
 # ZMQ settings, comment out for spoof testing
-# context = zmq.Context()
-# sock = context.socket(zmq.REC)
-# sock.connect(SOCKET)
+context = zmq.Context()
+sock = context.socket(zmq.SUB)
+sock.connect(SOCKET)
+sock.subscribe("")
 ###################################################################
 
 # Create Block Matching object
@@ -83,13 +84,15 @@ with col3:
 
 while run:
     ###############################################################
-    # Grab combined image for spoof testing, comment of for production
-    frame = imgtools.spoof(img)
+    
 
     # Grab combined images for production, comment out for spoof testing
-    # md = sock.recv_json()
-    # msg = sock.recv(copy=True, track=False)
-	# frame = np.frombuffer(msg, dtype=md["dtype"]).reshape(md["shape"])
+    md = sock.recv_json()
+    msg = sock.recv(copy=True, track=False)
+	frame = np.frombuffer(msg, dtype=md["dtype"]).reshape(md["shape"])
+
+    # Grab combined image for spoof testing, comment of for production
+    frame = imgtools.spoof(frame)
     ################################################################
     
     # Split out L and R frames and resize, create grayscale working copies
